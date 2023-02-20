@@ -131,7 +131,7 @@ def runthis(plist, base_url, l):
                                   stoploss = stoploss)
                 all_flags = True
             
-last_date = dt.date(dt.strptime("19 February, 2023 +0530", "%d %B, %Y %z"))
+last_date = dt.date(dt.strptime("20 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 while(True):                    
     current_datetime = dt.now(ist)
