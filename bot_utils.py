@@ -187,7 +187,7 @@ def api_weblogin(base_url, profile, logger):
     except:
         logger.fwrite(str("Already submitted."))
 
-    sleep(2)
+    sleep(5)
     #Obtaining the request token
     req_url = str(driver.current_url)
     parsed_url = u.urlparse(req_url)
@@ -298,7 +298,7 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
         sleep(interval)
 
 def get_watchlist_200x(profile, bot_price, logger):
-    expirylist = ["2023-02-02","2023-02-09", "2023-02-16", "2023-02-23", "2023-03-02", "2023-03-09", "2023-03-16", "2023-03-23", "2023-03-29"]
+    expirylist = [ "2023-02-23", "2023-03-02", "2023-03-09", "2023-03-16", "2023-03-23", "2023-03-29"]
     watchlist = []
     i = 0
     while(len(watchlist)==0):
