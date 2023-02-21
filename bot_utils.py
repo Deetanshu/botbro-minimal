@@ -268,6 +268,7 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
     
     while(True):
         quote = get_quotes(profiles[0], [tradingsymbol], logger, exchange)
+        update_flag = False
         if quote[tradingsymbol] >= target:
             for p in profiles:
                 if test:
@@ -281,7 +282,7 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
                                              quantity = quantity,
                                              product = product,
                                              order_type = order_type,
-                                             price = price,
+                                             price = target,
                                              validity = validity
                                              )
                 logger.fwrite(str("[LOG] SELL Order created for "+p.name+" with orderid "+orderid+" at price "+str(quote[tradingsymbol])))
@@ -303,6 +304,9 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
             logger.fwrite(str("[LOG] SELL Order created for "+p.name+" with orderid "+orderid+" at price "+str(quote[tradingsymbol])))
             logger.order_list_mail(profiles)
             return True
+        if quote[tradingsymbol] >= target-10 and not update_flag:
+            stoploss = price + 2
+            update_flag = True
         sleep(interval)
 
 def get_watchlist_200x(profile, bot_price, logger):
