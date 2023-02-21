@@ -36,7 +36,7 @@ class Logger():
     def add(self, text):
         try:
             self.data = self.data+"\n"+str(dt.now(pytz.timezone('Asia/Kolkata')))+" --> "+text
-            if len(self.all_logs) > 500000:
+            if len(self.all_logs) > 50000:
                 self.dump()
                 self.dump_mail(["deeptanshupaul@gmail.com"])
                 self.all_logs = """"""

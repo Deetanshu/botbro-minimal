@@ -61,7 +61,7 @@ def watchlist_200x(profile,bot_price, l):
         if i["askprice"]>=bot_price and i["askprice"]<=200:
             wl.append(i)
     return wl
-def runthis(plist, base_url, l):
+def runthis(plist, base_url, test, l):
     profiles = []
     for p in plist:
         profiles.append(x.api_weblogin(base_url, p, l))
@@ -128,11 +128,13 @@ def runthis(plist, base_url, l):
                                   logger = l,
                                   validity="DAY",
                                   target = target_price,
-                                  stoploss = stoploss)
+                                  stoploss = stoploss,
+                                  test = test)
                 all_flags = True
             
 last_date = dt.date(dt.strptime("20 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
+test = False
 while(True):                    
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
@@ -147,7 +149,7 @@ while(True):
             sleep(2)
             current_datetime = dt.now(ist)
         run_var = True
-        runthis(plist, base_url, l)
+        runthis(plist, base_url, test, l)
         print("Done")
         break
     else:

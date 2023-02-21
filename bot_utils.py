@@ -246,10 +246,14 @@ def get_orders_status_text(profile):
 # Buy order placing, ACTIVE sell order & stoploss monitoring function
 # Rework this to use threading
 
-def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, product, order_type, price, validity, logger, target=250, stoploss=0, interval = 1):
+def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, product, order_type, price, validity, logger, target=250, stoploss=0, interval = 1, test=False):
     orderids = []
     for p in profiles:
-        orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
+        if test:
+            print("Buy order for profile ", p.profilename)
+            orderid = "test123"
+        else:
+            orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
                                      variety = variety,
                                      exchange = exchange,
                                      transaction_type = 'BUY',
@@ -258,7 +262,7 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
                                      order_type = order_type,
                                      price = price,
                                      validity = validity
-            )
+                                     )
         orderids.append(orderid)
         logger.fwrite(str("[LOG] BUY Order created for "+p.name+" with orderid "+orderid))
     
@@ -266,7 +270,11 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
         quote = get_quotes(profiles[0], [tradingsymbol], logger, exchange)
         if quote[tradingsymbol] >= target:
             for p in profiles:
-                orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
+                if test:
+                    print("Sell order for profile ", p.profilename)
+                    orderid = "test234"
+                else:
+                    orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
                                              variety = variety,
                                              exchange = exchange,
                                              transaction_type = 'SELL',
@@ -275,7 +283,7 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
                                              order_type = order_type,
                                              price = price,
                                              validity = validity
-                    )
+                                             )
                 logger.fwrite(str("[LOG] SELL Order created for "+p.name+" with orderid "+orderid+" at price "+str(quote[tradingsymbol])))
             logger.order_list_mail(profiles)
             return True
