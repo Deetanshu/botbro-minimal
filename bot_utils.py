@@ -229,7 +229,7 @@ def api_weblogin(base_url, profile, logger):
         return profile 
     
     #Setting the strategy configuration for 200x.
-    strat_conf = {"200x":{"funds_perc":30, "lots":0}}
+    strat_conf = {"200x":{"funds_perc":40, "lots":0}}
     profile.set_strat_conf(strat_conf)
     return None 
 
