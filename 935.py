@@ -6,6 +6,7 @@
 import bot_utils as x
 from logger import Logger
 from datetime import datetime as dt
+from datetime import timedelta as td
 import math
 import concurrent.futures
 import pytz
@@ -88,7 +89,7 @@ def runthis(plist, base_url, test, l):
     target_price = 200
     stoploss = 180
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
-    sleep_time = (current_datetime, wl_dt).total_seconds()-5
+    sleep_time = (wl_dt, current_datetime).total_seconds()-5
     sleep(sleep_time)
     while(not all_flags):
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
@@ -146,10 +147,10 @@ def runthis(plist, base_url, test, l):
 last_date = dt.date(dt.strptime("23 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
+exec_date = dt.date(last_date.strftime("%d %B, %Y")+td(days=1))
 while(True):                    
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
-    exec_date = current_date.strftime("%d %B, %Y")
     execute_datetime = dt.strptime("09:20:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     if current_date > last_date:
         last_date = current_date
@@ -162,9 +163,9 @@ while(True):
         run_var = True
         plist = runthis(plist, base_url, test, l)
         print("Done")
-        break
+        exec_date = dt.date(current_date.strftime("%d %B, %Y")+td(days=1))
     else:
-        num_sec = math.floor((current_datetime-execute_datetime).total_seconds()) - 150
+        num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
         if num_sec <0:
             num_sec = 30
