@@ -165,7 +165,7 @@ while(True):
         print("Done")
         break
     else:
-        num_sec = (current_datetime-execute_datetime).total_seconds() - 150
+        num_sec = (current_datetime-execute_datetime).total_seconds() 
         print("Sleeping for ", num_sec)
         sleep(num_sec)
     
