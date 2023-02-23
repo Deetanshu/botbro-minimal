@@ -89,7 +89,7 @@ def runthis(plist, base_url, test, l):
     target_price = 200
     stoploss = 180
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
-    sleep_time = (wl_dt-current_datetime).total_seconds()-5
+    sleep_time = (current_datetime, wl_dt).total_seconds()-5
     sleep(sleep_time)
     while(not all_flags):
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
@@ -165,8 +165,8 @@ while(True):
         print("Done")
         break
     else:
-        num_sec = (execute_datetime - current_datetime).total_seconds() - 150
+        num_sec = (current_datetime-execute_datetime).total_seconds() - 150
         print("Sleeping for ", num_sec)
-        sleep(60)
+        sleep(num_sec)
     
 print("done")
