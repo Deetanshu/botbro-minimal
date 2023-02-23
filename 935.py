@@ -147,7 +147,7 @@ def runthis(plist, base_url, test, l):
 last_date = dt.date(dt.strptime("23 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
-exec_date = dt.date(last_date.strftime("%d %B, %Y")+td(days=1))
+exec_date = (last_date+td(days=1)).strftime("%d %B, %Y")
 while(True):                    
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
@@ -163,7 +163,7 @@ while(True):
         run_var = True
         plist = runthis(plist, base_url, test, l)
         print("Done")
-        exec_date = dt.date(current_date.strftime("%d %B, %Y")+td(days=1))
+        exec_date = (last_date+td(days=1)).strftime("%d %B, %Y")
     else:
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
