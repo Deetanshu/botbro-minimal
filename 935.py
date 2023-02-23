@@ -8,7 +8,7 @@ from logger import Logger
 from datetime import datetime as dt
 from datetime import timedelta as td
 import datetime as dd
-import threading
+import concurrent.futures
 import pytz
 from time import sleep
 
@@ -46,7 +46,11 @@ base_url = "https://kite.zerodha.com/connect/login?v=3&api_key="
 l = Logger("strat_200x")
 
 plist = x.create_profiles(profiles, l)
-def watchlist_200x(profile,bot_price, l):
+
+def watchlist_200x_DEPRECATED(profile,bot_price, l):
+    """
+    This has been deprecated due to failures with accessing NSE platform
+    """
     try:
         call_put_list = x.get_all_calls_puts("https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY", l)
     except:
@@ -55,22 +59,27 @@ def watchlist_200x(profile,bot_price, l):
         except:
             print("Error in both so retrying...")
             l.fwrite("[LOG] Retrying by recursion. ")
-            return watchlist_200x(profile, bot_price, l)
+            #return watchlist_200x(profile, bot_price, l)
     wl = []
     for i in call_put_list:
         if i["askprice"]>=bot_price and i["askprice"]<=200:
             wl.append(i)
     return wl
+
+
+
 def runthis(plist, base_url, test, l):
     profiles = []
-    for p in plist:
-        profiles.append(x.api_weblogin(base_url, p, l))
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
+        profiles = [f.result() for f in futures]
     
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
-    ist = pytz.timezone('Asia/Kolkata')
+    #ist = pytz.timezone('Asia/Kolkata')
     today = dt.date(current_datetime)
     exec_date = today.strftime("%d %B, %Y")
-    end_dt = dt.strptime("09:55:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    wl_dt = dt.strptime("09:55:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     check_dt = dt.strptime("09:33:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     watchlist = []
     watch_price = 180
@@ -79,7 +88,9 @@ def runthis(plist, base_url, test, l):
     flags = [False,False,False]
     target_price = 200
     stoploss = 180
-        
+    current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
+    sleep_time = (wl_dt-current_datetime).total_seconds()-5
+    sleep(sleep_time)
     while(not all_flags):
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
         if len(watchlist) == 0:
@@ -117,7 +128,7 @@ def runthis(plist, base_url, test, l):
                         continue
                 
             if flags[1] and execute is not None:
-                x.buy_active_sell(profiles,
+                profiles = x.buy_active_sell(profiles,
                                   variety = "regular",
                                   exchange = "NFO",
                                   tradingsymbol = execute["symbol"],
@@ -131,15 +142,16 @@ def runthis(plist, base_url, test, l):
                                   stoploss = stoploss,
                                   test = test)
                 all_flags = True
+    return profiles
             
-last_date = dt.date(dt.strptime("20 February, 2023 +0530", "%d %B, %Y %z"))
+last_date = dt.date(dt.strptime("23 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
 while(True):                    
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
     exec_date = current_date.strftime("%d %B, %Y")
-    execute_datetime = dt.strptime("09:25:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    execute_datetime = dt.strptime("09:20:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     if current_date > last_date:
         last_date = current_date
         while(current_datetime <= execute_datetime):
@@ -149,11 +161,12 @@ while(True):
             sleep(2)
             current_datetime = dt.now(ist)
         run_var = True
-        runthis(plist, base_url, test, l)
+        plist = runthis(plist, base_url, test, l)
         print("Done")
         break
     else:
-        print("Sleeping...")
+        num_sec = (execute_datetime - current_datetime).total_seconds() - 150
+        print("Sleeping for ", num_sec)
         sleep(60)
     
 print("done")

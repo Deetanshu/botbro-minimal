@@ -20,9 +20,8 @@ import requests
 import pytz
 from datetime import datetime as dt
 import math
-import threading
+import concurrent.futures
 from optionchain_stream import OptionChain
-
 
 class Profile():
     """
@@ -31,7 +30,7 @@ class Profile():
     The TOTP code is a 32 digit string provided through the Zerodha 2FA setup.
 
     """
-    def __init__(self, profilename, username, password, totp_code, api_key, api_secret, logger, kite=None, access_token=None):
+    def __init__(self, profilename, username, password, totp_code, api_key, api_secret, logger, kite=None, access_token=None, strat_conf={}):
         self.profilename = profilename
         self.name = profilename
         self.username = username
@@ -42,6 +41,7 @@ class Profile():
         self.logger = logger 
         self.access_token = access_token
         self.kite = kite
+        self.strat_conf = strat_conf
         self.logger.fwrite(str("[INFO] Profile created for username "+self.username+" with name "+self.profilename))
     
     def set_access_token(self, access_token):
@@ -63,6 +63,10 @@ class Profile():
         else:
             self.logger.fwrite("[LOG] SUCCESS: Kite object set.")
             return True
+    
+    def set_strat_conf(self, strat_conf):
+        self.logger.fwrite(str("[LOG] "+self.username+": Setting strategy configuration"))
+        self.strat_conf = strat_conf
 
 """ TODO: Saved for v0.2:
 def load_profiles(profile_json_path):
@@ -149,6 +153,24 @@ def create_profiles(profilelist, logger):
 
 # Function to log into a profile using chrome
 def api_weblogin(base_url, profile, logger):
+    """
+    TODO: FILL OUT DOCSTRING
+
+    Parameters
+    ----------
+    base_url : TYPE
+        DESCRIPTION.
+    profile : TYPE
+        DESCRIPTION.
+    logger : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    profile : TYPE
+        DESCRIPTION.
+
+    """
     url = str(base_url+profile.api_key)
     
     username = profile.username
@@ -206,10 +228,35 @@ def api_weblogin(base_url, profile, logger):
     if profile.access_token is not None:
         return profile 
     
+    #Setting the strategy configuration for 200x.
+    strat_conf = {"200x":{"funds_perc":30, "lots":0}}
+    profile.set_strat_conf(strat_conf)
     return None 
 
 # Get Quote for different keys 
 def get_quotes(profile, watchlist, logger, exchange = "NFO", num_retries = 0):
+    """
+    TODO: FILL OUT DOCSTRING
+
+    Parameters
+    ----------
+    profile : TYPE
+        DESCRIPTION.
+    watchlist : TYPE
+        DESCRIPTION.
+    logger : TYPE
+        DESCRIPTION.
+    exchange : TYPE, optional
+        DESCRIPTION. The default is "NFO".
+    num_retries : TYPE, optional
+        DESCRIPTION. The default is 0.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
     if num_retries >=5:
         logger.error_mail("Quote number of retries exceeded.")
         return 200
@@ -245,71 +292,237 @@ def get_orders_status_text(profile):
         
 # Buy order placing, ACTIVE sell order & stoploss monitoring function
 # Rework this to use threading
+def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type, product, order_type, price, validity, logger):
+    """
+    TODO: Complete Docstring
+
+    Parameters
+    ----------
+    profile : TYPE
+        DESCRIPTION.
+    tradingsymbol : TYPE
+        DESCRIPTION.
+    variety : TYPE
+        DESCRIPTION.
+    exchange : TYPE
+        DESCRIPTION.
+    transaction_type : TYPE
+        DESCRIPTION.
+    product : TYPE
+        DESCRIPTION.
+    order_type : TYPE
+        DESCRIPTION.
+    price : TYPE
+        DESCRIPTION.
+    validity : TYPE
+        DESCRIPTION.
+    logger : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    profile : TYPE
+        DESCRIPTION.
+
+    """
+    try:
+        quantity = 0
+        if order_type == 'BUY':
+            balance = profile.kite.margins()['equity']['available']['live_balance'] * profile.strat_conf['200x']['fund_perc']/100
+            lots = math.floor(balance/15000)
+            strat_conf = profile.strat_conf
+            strat_conf['200x']['lots'] = lots
+            profile.set_strat_conf(strat_conf)
+            quantity = lots*50
+        elif order_type == 'SELL':
+            quantity = profile.strat_conf['200x']['lots']*50
+        
+        if quantity == 0:
+            return profile
+        orderid = profile.kite.place_order(
+            tradingsymbol = tradingsymbol,
+            variety = variety,
+            exchange = exchange,
+            transaction_type = transaction_type,
+            quantity = quantity,
+            product = product,
+            order_type = order_type,
+            price = price,
+            validity = validity
+        )
+        logger.fwrite(str("[LOG] BUY order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+price+" quantity "+quantity))
+        return profile
+    except:
+        logger.error_mail(str("place order failure for "+profile.username))
+        return profile
 
 def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, product, order_type, price, validity, logger, target=250, stoploss=0, interval = 1, test=False):
-    orderids = []
-    for p in profiles:
-        if test:
-            print("Buy order for profile ", p.profilename)
-            orderid = "test123"
-        else:
-            orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
-                                     variety = variety,
-                                     exchange = exchange,
-                                     transaction_type = 'BUY',
-                                     quantity = quantity,
-                                     product = product,
-                                     order_type = order_type,
-                                     price = price,
-                                     validity = validity
-                                     )
-        orderids.append(orderid)
-        logger.fwrite(str("[LOG] BUY Order created for "+p.name+" with orderid "+orderid))
+    """
+    TODO: DOCSTRING NEEDS TO BE FILLED
+
+    Parameters
+    ----------
+    profiles : TYPE
+        DESCRIPTION.
+    variety : TYPE
+        DESCRIPTION.
+    exchange : TYPE
+        DESCRIPTION.
+    tradingsymbol : TYPE
+        DESCRIPTION.
+    quantity : TYPE
+        DESCRIPTION.
+    product : TYPE
+        DESCRIPTION.
+    order_type : TYPE
+        DESCRIPTION.
+    price : TYPE
+        DESCRIPTION.
+    validity : TYPE
+        DESCRIPTION.
+    logger : TYPE
+        DESCRIPTION.
+    target : TYPE, optional
+        DESCRIPTION. The default is 250.
+    stoploss : TYPE, optional
+        DESCRIPTION. The default is 0.
+    interval : TYPE, optional
+        DESCRIPTION. The default is 1.
+    test : TYPE, optional
+        DESCRIPTION. The default is False.
+
+    Returns
+    -------
+    profiles : TYPE
+        DESCRIPTION.
+
+    """
+    if test:
+        print("Buy order for "+tradingsymbol+" at price "+price)
+    else:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            transaction_type = 'BUY'
+            futures = [executor.submit(place_order_200x, p, tradingsymbol, variety, exchange, transaction_type, product, order_type, price, validity, logger) for p in profiles]
+            profiles = [f.result() for f in futures]
+
+        logger.fwrite(str("[LOG] BUY Orders created for profiles"))
     
     while(True):
         quote = get_quotes(profiles[0], [tradingsymbol], logger, exchange)
         update_flag = False
         if quote[tradingsymbol] >= target:
-            for p in profiles:
-                if test:
-                    print("Sell order for profile ", p.profilename)
-                    orderid = "test234"
-                else:
-                    orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
-                                             variety = variety,
-                                             exchange = exchange,
-                                             transaction_type = 'SELL',
-                                             quantity = quantity,
-                                             product = product,
-                                             order_type = order_type,
-                                             price = target,
-                                             validity = validity
-                                             )
-                logger.fwrite(str("[LOG] SELL Order created for "+p.name+" with orderid "+orderid+" at price "+str(quote[tradingsymbol])))
-            logger.order_list_mail(profiles)
-            return True
+            if test:
+                print("SELL order placed for "+tradingsymbol+"at price "+target)
+                return profiles
+            else:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    transaction_type = 'SELL'
+                    futures = [executor.submit(place_order_200x, p, tradingsymbol, variety, exchange, transaction_type, product, order_type, target, validity, logger) for p in profiles]
+                    profiles = [f.result() for f in futures]
+                    logger.fwrite(str("[LOG] SELL Orders created for profiles at target"))
+            return profiles
         if quote[tradingsymbol] <= stoploss:
-            for p in profiles:
-                orderid = p.kite.place_order(tradingsymbol = tradingsymbol,
-                                             variety = variety,
-                                             exchange = exchange,
-                                             transaction_type = 'SELL',
-                                             quantity = quantity,
-                                             product = product,
-                                             order_type = order_type,
-                                             price = stoploss,
-                                             validity = validity
-                    )
-                
-            logger.fwrite(str("[LOG] SELL Order created for "+p.name+" with orderid "+orderid+" at price "+str(quote[tradingsymbol])))
-            logger.order_list_mail(profiles)
-            return True
+            if test:
+                print("SELL order placed for "+tradingsymbol+"at price "+stoploss)
+                return profiles
+            else:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    transaction_type = 'SELL'
+                    futures = [executor.submit(place_order_200x, p, tradingsymbol, variety, exchange, transaction_type, product, order_type, stoploss, validity, logger) for p in profiles]
+                    profiles = [f.result() for f in futures]
+                    logger.fwrite(str("[LOG] SELL Orders created for profiles at stoploss"))
+            return profiles
+
         if quote[tradingsymbol] >= target-10 and not update_flag:
             stoploss = price + 2
             update_flag = True
         sleep(interval)
 
+def get_expiry(logger):
+    """
+    Not used
+    """
+    while(True):    
+        try:
+            response_text = get_data(url_nf)
+            break 
+        except:
+            logger.fwrite("[LOG] Retrying to get data from NSE Website")
+    
+
+    data = json.loads(response_text)
+    expiry = dt.strptime(data['records']['expiryDates'][0], '%d-%b-%Y').date()
+    return expiry
+
 def get_watchlist_200x(profile, bot_price, logger):
+    """
+    This function obtains and returns the watchlist using Zerodha's kiteconnect.
+
+    Parameters
+    ----------
+    profile : Object of class Profile
+        Stores profile relevant information.
+    bot_price : FLOAT
+        Lower bound price for bot to use for 200x.
+    logger : Object of class Logger
+        Used to generate logs and store them.
+
+    Returns
+    -------
+    returnlist : LIST of DICT
+        Contains watchlist.
+
+    """
+    resp = profile.kite.instruments(exchange='NFO')
+    expiry = "2123-01-01"
+    for i in resp:
+        if i['expiry'] < expiry:
+            expiry = i['expiry']
+    
+    logger.fwrite(str("[LOG] getting data with expiry: "+expiry))
+    highest = {'symbol':'', 'last_price':0.0}
+    second = {'symbol':'', 'last_price':0.0}
+    quotelist = []
+    for i in resp:
+        if i['expiry'] == expiry:
+            quotelist.append(i['tradingsymbol'])
+    
+    quotes = get_quotes(profile, quotelist, logger)
+    for symbol in quotes:
+        if quotes[symbol] > highest['last_price'] and quotes[symbol] <= 200:
+            second = highest
+            highest['symbol'] = symbol 
+            highest['last_price'] = quotes[symbol]
+        elif quotes[symbol] > second['last_price'] and quotes[symbol] <=200:
+            second['symbol'] = symbol
+            second['last_price'] = quotes[symbol]
+    
+    returnlist = []
+    if highest['symbol'] != '':
+        returnlist.append(highest)
+    if second['symbol'] != '':
+        returnlist.append(second)
+    return returnlist
+
+def get_watchlist_200x_DEPRECATED(profile, bot_price, logger):
+    """
+    DEPRECATED DUE TO MEMORY LEAK WHILE USING OPTIONCHAIN STREAM
+
+    Parameters
+    ----------
+    profile : TYPE
+        DESCRIPTION.
+    bot_price : TYPE
+        DESCRIPTION.
+    logger : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    watchlist : TYPE
+        DESCRIPTION.
+
+    """
     expirylist = [ "2023-02-23"]
     watchlist = []
     i = 0
