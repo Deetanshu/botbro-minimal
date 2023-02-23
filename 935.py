@@ -6,8 +6,7 @@
 import bot_utils as x
 from logger import Logger
 from datetime import datetime as dt
-from datetime import timedelta as td
-import datetime as dd
+import math
 import concurrent.futures
 import pytz
 from time import sleep
@@ -165,7 +164,7 @@ while(True):
         print("Done")
         break
     else:
-        num_sec = (current_datetime-execute_datetime).total_seconds() - 150
+        num_sec = math.floor((current_datetime-execute_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
         if num_sec <0:
             num_sec = 30
