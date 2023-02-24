@@ -79,7 +79,7 @@ def runthis(plist, base_url, test, l):
     #ist = pytz.timezone('Asia/Kolkata')
     today = dt.date(current_datetime)
     exec_date = today.strftime("%d %B, %Y")
-    wl_dt = dt.strptime("09:55:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    wl_dt = dt.strptime("09:25:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     check_dt = dt.strptime("09:33:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     watchlist = []
     watch_price = 180
@@ -89,7 +89,7 @@ def runthis(plist, base_url, test, l):
     target_price = 200
     stoploss = 180
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
-    sleep_time = (wl_dt, current_datetime).total_seconds()-5
+    sleep_time = (wl_dt - current_datetime).total_seconds()-5
     sleep(sleep_time)
     while(not all_flags):
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
@@ -142,6 +142,13 @@ def runthis(plist, base_url, test, l):
                                   stoploss = stoploss,
                                   test = test)
                 all_flags = True
+        else:
+            sleep_time = (check_dt-current_datetime).total_seconds()-2
+            if sleep_time < 3:
+                sleep_time = 0
+            print("Sleeping for "+str(sleep_time))
+            sleep(sleep_time)
+            
     return profiles
             
 last_date = dt.date(dt.strptime("23 February, 2023 +0530", "%d %B, %Y %z"))
