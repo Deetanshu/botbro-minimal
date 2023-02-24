@@ -476,7 +476,7 @@ def get_watchlist_200x(profile, bot_price, logger):
 
     """
     resp = profile.kite.instruments(exchange='NFO')
-    expiry = dt.strptime("2123-01-01", '%Y-%m-%d')
+    expiry = dt.strptime("2123-01-01", '%Y-%m-%d').date()
     for i in resp:
         if i['expiry'] < expiry and i['tradingsymbol'][:5]=='NIFTY':
             expiry = i['expiry']
