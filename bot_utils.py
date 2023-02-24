@@ -225,12 +225,14 @@ def api_weblogin(base_url, profile, logger):
     profile.set_access_token(access_token)
     profile.set_kite_object(kite)
     driver.quit()
-    if profile.access_token is not None:
-        return profile 
+
     
     #Setting the strategy configuration for 200x.
     strat_conf = {"200x":{"funds_perc":40, "lots":0}}
     profile.set_strat_conf(strat_conf)
+    
+    if profile.access_token is not None:
+        return profile 
     return None 
 
 # Get Quote for different keys 
@@ -327,14 +329,14 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
     """
     try:
         quantity = 0
-        if order_type == 'BUY':
+        if transaction_type == 'BUY':
             balance = profile.kite.margins()['equity']['available']['live_balance'] * profile.strat_conf['200x']['fund_perc']/100
             lots = math.floor(balance/15000)
             strat_conf = profile.strat_conf
             strat_conf['200x']['lots'] = lots
             profile.set_strat_conf(strat_conf)
             quantity = lots*50
-        elif order_type == 'SELL':
+        elif transaction_type == 'SELL':
             quantity = profile.strat_conf['200x']['lots']*50
         
         if quantity == 0:
@@ -350,7 +352,7 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
             price = price,
             validity = validity
         )
-        logger.fwrite(str("[LOG] BUY order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+price+" quantity "+quantity))
+        logger.fwrite(str("[LOG] "+transaction_type+" order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+price+" quantity "+quantity))
         return profile
     except:
         logger.error_mail(str("place order failure for "+profile.username))
