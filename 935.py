@@ -90,6 +90,8 @@ def runthis(plist, base_url, test, l):
     stoploss = 180
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
     sleep_time = (wl_dt - current_datetime).total_seconds()-5
+    if sleep_time < 0:
+        sleep_time = 0
     sleep(sleep_time)
     while(not all_flags):
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
