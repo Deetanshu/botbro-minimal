@@ -113,7 +113,7 @@ def runthis(plist, base_url, test, l):
                     highest = i["last_price"]
                     execute = i
             sleep(1)
-            if highest > 200:
+            if highest >= 200:
                 target_price = highest+30
                 stoploss = highest - 25
                 flags[1] = True

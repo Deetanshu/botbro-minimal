@@ -486,7 +486,7 @@ def get_watchlist_200x(profile, bot_price, logger):
     second = {'symbol':'', 'last_price':0.0}
     quotelist = []
     for i in resp:
-        if i['expiry'] == expiry:
+        if i['expiry'] == expiry and i['tradingsymbol'][:5]=='NIFTY':
             quotelist.append(i['tradingsymbol'])
     
     quotes = get_quotes(profile, quotelist, logger)
