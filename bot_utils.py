@@ -228,7 +228,7 @@ def api_weblogin(base_url, profile, logger):
 
     
     #Setting the strategy configuration for 200x.
-    strat_conf = {"200x":{"funds_perc":40, "lots":0}}
+    strat_conf = {"200x":{"fund_perc":40, "lots":0}}
     profile.set_strat_conf(strat_conf)
     
     if profile.access_token is not None:
