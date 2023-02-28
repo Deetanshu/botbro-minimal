@@ -228,7 +228,7 @@ def api_weblogin(base_url, profile, logger):
 
     
     #Setting the strategy configuration for 200x.
-    strat_conf = {"200x":{"fund_perc":40, "lots":0}}
+    strat_conf = {"200x":{"fund_perc":40, "lots":0}, "3pm":{"fund_perc":80, "lots":0}}
     profile.set_strat_conf(strat_conf)
     
     if profile.access_token is not None:
@@ -439,6 +439,149 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
             stoploss = price + 2
             update_flag = True
         sleep(interval)
+
+def get_watchlist_3pm(profile, upper_bound, lower_bound, logger):
+
+    resp = profile.kite.instruments(exchange = "NFO")
+    expiry = dt.strptime("2123-01-01", '%Y-%m-%d').date()
+    for i in resp:
+        if i['expiry'] < expiry and i['tradingsymbol'][:5]=='NIFTY':
+            expiry = i['expiry']
+    
+    quotelist = []
+    for i in resp:
+        if i['expiry'] == expiry and i['tradingsymbol'][:5]=='NIFTY':
+            quotelist.append(i['tradingsymbol'])
+    
+    quotes = get_quotes(profile, quotelist, logger)
+    watchlist = []
+    for symbol in quotes:
+        if quotes[symbol] >= lower_bound and quotes[symbol] <= upper_bound:
+            watchlist.append({"symbol": symbol, "last_price": quotes[symbol]})
+    return watchlist
+
+def place_order_3pm(profile, transaction_type, tradingsymbol, logger):
+    try:
+        quantity = 0
+        if transaction_type == 'BUY':
+            balance = profile.kite.margins()['equity']['available']['live_balance'] * profile.strat_conf['3pm']['fund_perc']/100
+            lots = math.floor(balance/20000)
+            strat_conf = profile.strat_conf
+            strat_conf['3pm']['lots'] = lots
+            profile.set_strat_conf(strat_conf)
+            quantity = lots*50
+        elif transaction_type == 'SELL':
+            quantity = profile.strat_conf['3pm']['lots']*50
+        
+        if quantity == 0:
+            return profile
+        
+        orderid = profile.kite.place_order(
+            tradingsymbol = tradingsymbol,
+            variety = "regular",
+            exchange = "NFO",
+            transaction_type = transaction_type,
+            quantity = quantity,
+            product = "MIS",
+            order_type = "MARKET",
+            price = 150,
+            validity = "DAY"
+        )
+        logger.fwrite(str("[LOG] "+transaction_type+" order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" quantity "+str(quantity)))
+        return profile 
+    except:
+        logger.error_mail(str("place order failure for "+profile.username))
+        return profile
+
+
+
+
+
+def buy_active_sell_3pm(profiles, ce, pe, logger):
+    sl_pts = 5
+    target_pt = 20 
+    wl = [ce['symbol'], pe['symbol']]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        transaction_type = 'BUY'
+        futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol']) for p in profiles]
+        profiles = [f.result() for f in futures]
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        transaction_type = 'BUY'
+        futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol']) for p in profiles]
+        profiles = [f.result() for f in futures]
+
+    quotes = get_quotes(profiles[1], wl, logger)
+    ce_target = quotes[ce['symbol']]+target_pt
+    ce_sl = quotes[ce['symbol']]-sl_pts
+    pe_target = quotes[pe['symbol']]+target_pt
+    pe_sl = quotes[pe['symbol']]-sl_pts
+    ce_symbol = ce['symbol']
+    pe_symbol = pe['symbol']
+    flags = [False, False]
+    while(True):
+        quotes = get_quotes(profiles[1], wl, logger)
+        if quotes[ce_symbol] >= ce_target or quotes[ce_symbol]<= ce_sl:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                transaction_type = 'SELL'
+                futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol']) for p in profiles]
+                profiles = [f.result() for f in futures]
+                flags[0] = True
+        if quotes[pe_symbol] >= pe_target or quotes[pe_symbol]<= pe_sl:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                transaction_type = 'SELL'
+                futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol']) for p in profiles]
+                profiles = [f.result() for f in futures]
+                flags[1] = True 
+        
+        if flags[0] and flags[1]:
+            break 
+    
+    return profiles 
+
+
+
+
+def strat_3pm(profiles, logger):
+    """
+    Only for NIFTY
+    """
+    logger.fwrite("[LOG] Executing 3pm strat")
+    ist = pytz.timezone('Asia/Kolkata')
+    current_datetime = dt.now(ist)
+    current_date = dt.date(current_datetime)
+    cd_str = current_date.strftime("%d %B, %Y")
+    lower_bound = 0
+    upper_bound = 0
+    if current_date.weekday()<3 and current_date.weekday() > 0:
+        lower_bound = 150
+        upper_bound = 170
+    elif current_date.weekday() ==3:
+        lower_bound = 80
+        upper_bound = 100
+    wl = get_watchlist_3pm(profiles[1], upper_bound, lower_bound, logger)
+    ce = {'symbol':"", 'last_price':0}
+    pe = {'symbol':"", 'last_price':0}
+    for w in wl:
+        if w['symbol'][-2:] == 'CE':
+            if w['last_price']>ce['last_price']:
+                ce = w 
+        elif w['symbol'][-2:] == 'PE':
+            if w['last_price']>pe['last_price']:
+                pe = w 
+    
+    buy_time = dt.strptime("14:59:00:10 "+cd_str+" +530", "%H:%M:%S:%f %d %B, %Y %z")
+    
+    current_datetime = dt.now(ist)
+    sleep_time = (buy_time - current_datetime).total_seconds() - 1
+    print("Sleeping for "+sleep_time+" seconds")
+    sleep(sleep_time)
+    buy_active_sell_3pm(profiles, ce, pe, logger)
+
+
+
+
+
 
 def get_expiry(logger):
     """

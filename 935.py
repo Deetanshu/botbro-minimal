@@ -69,12 +69,7 @@ def watchlist_200x_DEPRECATED(profile,bot_price, l):
 
 
 def runthis(plist, base_url, test, l):
-    profiles = []
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
-        profiles = [f.result() for f in futures]
-    
+    profiles = plist
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
     #ist = pytz.timezone('Asia/Kolkata')
     today = dt.date(current_datetime)
@@ -153,15 +148,19 @@ def runthis(plist, base_url, test, l):
             
     return profiles
             
-last_date = dt.date(dt.strptime("23 February, 2023 +0530", "%d %B, %Y %z"))
+last_date = dt.date(dt.strptime("27 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
-exec_date = (last_date+td(days=1)).strftime("%d %B, %Y")
+exec_date_str = (last_date+td(days=1)).strftime("%d %B, %Y")
 while(True):                    
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
-    execute_datetime = dt.strptime("09:20:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    execute_datetime = dt.strptime("09:20:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    exec_dt_2 = dt.strptime("14:55:00:10 "+exec_date_str+" +530", "%H:%M:%S:%f %d %B, %Y %z")
     if current_date > last_date:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
+            profiles = [f.result() for f in futures]
         last_date = current_date
         while(current_datetime <= execute_datetime):
             print("not yet")
@@ -172,7 +171,16 @@ while(True):
         run_var = True
         plist = runthis(plist, base_url, test, l)
         print("Done")
-        exec_date = (last_date+td(days=1)).strftime("%d %B, %Y")
+        exec_date = (last_date+td(days=1))
+        while(exec_date.weekday()>=5):
+            exec_date = (exec_date+td(days=1))
+        
+        exec_date_str = exec_date.strftime("%d %B, %Y")
+        if current_date.weekday() >0 and current_date.weekday() <4:
+            current_datetime = dt.now(ist)
+            sleep_time = (exec_dt_2 - current_datetime).total_seconds() - 2
+            sleep(sleep_time)
+            profiles = x.strat_3pm(profiles, l)
     else:
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
