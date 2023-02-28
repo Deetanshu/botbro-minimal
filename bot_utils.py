@@ -538,6 +538,7 @@ def buy_active_sell_3pm(profiles, ce, pe, logger):
                 futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol'], logger) for p in profiles]
                 profiles = [f.result() for f in futures]
                 flags[0] = True
+        sleep(1)
         if quotes[pe_symbol] >= pe_target or quotes[pe_symbol]<= pe_sl:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 transaction_type = 'SELL'
