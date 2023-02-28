@@ -458,6 +458,7 @@ def get_watchlist_3pm(profile, upper_bound, lower_bound, logger):
     for symbol in quotes:
         if quotes[symbol] >= lower_bound and quotes[symbol] <= upper_bound:
             watchlist.append({"symbol": symbol, "last_price": quotes[symbol]})
+    print(watchlist)
     return watchlist
 
 def place_order_3pm(profile, transaction_type, tradingsymbol, logger):
@@ -465,7 +466,7 @@ def place_order_3pm(profile, transaction_type, tradingsymbol, logger):
         quantity = 0
         if transaction_type == 'BUY':
             balance = profile.kite.margins()['equity']['available']['live_balance'] * profile.strat_conf['3pm']['fund_perc']/100
-            lots = math.floor(balance/20000)
+            lots = math.floor(balance/40000)
             strat_conf = profile.strat_conf
             strat_conf['3pm']['lots'] = lots
             profile.set_strat_conf(strat_conf)
@@ -510,7 +511,8 @@ def buy_active_sell_3pm(profiles, ce, pe, logger):
         transaction_type = 'BUY'
         futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol'], logger) for p in profiles]
         profiles = [f.result() for f in futures]
-
+    
+    
     quotes = get_quotes(profiles[1], wl, logger)
     ce_target = quotes[ce['symbol']]+target_pt
     ce_sl = quotes[ce['symbol']]-sl_pts
@@ -536,6 +538,7 @@ def buy_active_sell_3pm(profiles, ce, pe, logger):
         
         if flags[0] and flags[1]:
             break 
+        sleep(1)
     
     return profiles 
 
