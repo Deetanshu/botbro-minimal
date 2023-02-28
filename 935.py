@@ -148,7 +148,7 @@ def runthis(plist, base_url, test, l):
             
     return profiles
             
-last_date = dt.date(dt.strptime("27 February, 2023 +0530", "%d %B, %Y %z"))
+last_date = dt.date(dt.strptime("28 February, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
 exec_date_str = (last_date+td(days=1)).strftime("%d %B, %Y")
@@ -169,7 +169,7 @@ while(True):
             sleep(2)
             current_datetime = dt.now(ist)
         run_var = True
-        #plist = runthis(plist, base_url, test, l)
+        plist = runthis(profiles, base_url, test, l)
         print("Done")
         exec_date = (last_date+td(days=1))
         while(exec_date.weekday()>=5):
@@ -182,7 +182,7 @@ while(True):
             if sleep_time < 0:
                 sleep_time=0
             sleep(sleep_time)
-            profiles = x.strat_3pm(profiles, l)
+            #profiles = x.strat_3pm(profiles, l)
     else:
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
