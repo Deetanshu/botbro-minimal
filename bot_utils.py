@@ -503,12 +503,12 @@ def buy_active_sell_3pm(profiles, ce, pe, logger):
     wl = [ce['symbol'], pe['symbol']]
     with concurrent.futures.ThreadPoolExecutor() as executor:
         transaction_type = 'BUY'
-        futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol']) for p in profiles]
+        futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol'], logger) for p in profiles]
         profiles = [f.result() for f in futures]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         transaction_type = 'BUY'
-        futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol']) for p in profiles]
+        futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol'], logger) for p in profiles]
         profiles = [f.result() for f in futures]
 
     quotes = get_quotes(profiles[1], wl, logger)
@@ -524,13 +524,13 @@ def buy_active_sell_3pm(profiles, ce, pe, logger):
         if quotes[ce_symbol] >= ce_target or quotes[ce_symbol]<= ce_sl:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 transaction_type = 'SELL'
-                futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol']) for p in profiles]
+                futures = [executor.submit(place_order_3pm, p, transaction_type, ce['symbol'], logger) for p in profiles]
                 profiles = [f.result() for f in futures]
                 flags[0] = True
         if quotes[pe_symbol] >= pe_target or quotes[pe_symbol]<= pe_sl:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 transaction_type = 'SELL'
-                futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol']) for p in profiles]
+                futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol'], logger) for p in profiles]
                 profiles = [f.result() for f in futures]
                 flags[1] = True 
         
