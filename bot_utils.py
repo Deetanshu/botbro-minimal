@@ -512,8 +512,17 @@ def buy_active_sell_3pm(profiles, ce, pe, logger):
         futures = [executor.submit(place_order_3pm, p, transaction_type, pe['symbol'], logger) for p in profiles]
         profiles = [f.result() for f in futures]
     
-    
-    quotes = get_quotes(profiles[1], wl, logger)
+    profilecount = 0
+    while(True):
+        try:
+            quotes = get_quotes(profiles[profilecount], wl, logger)
+            break
+        except:
+            profilecount = profilecount+1
+            if profilecount > 2:
+                profilecount = 0
+            
+       
     ce_target = quotes[ce['symbol']]+target_pt
     ce_sl = quotes[ce['symbol']]-sl_pts
     pe_target = quotes[pe['symbol']]+target_pt
