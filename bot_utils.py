@@ -576,7 +576,7 @@ def strat_3pm(profiles, logger):
     sleep_time = (buy_time - current_datetime).total_seconds() - 1
     if sleep_time <0:
         sleep_time = 0
-    print("Sleeping for "+sleep_time+" seconds")
+    print("Sleeping for "+str(sleep_time)+" seconds")
     sleep(sleep_time)
     buy_active_sell_3pm(profiles, ce, pe, logger)
 
