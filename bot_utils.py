@@ -570,7 +570,7 @@ def strat_3pm(profiles, logger):
             if w['last_price']>pe['last_price']:
                 pe = w 
     
-    buy_time = dt.strptime("14:59:00:10 "+cd_str+" +530", "%H:%M:%S:%f %d %B, %Y %z")
+    buy_time = dt.strptime("14:59:00:10 "+cd_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     
     current_datetime = dt.now(ist)
     sleep_time = (buy_time - current_datetime).total_seconds() - 1

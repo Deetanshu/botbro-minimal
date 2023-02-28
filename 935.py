@@ -156,7 +156,7 @@ while(True):
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
     execute_datetime = dt.strptime("09:20:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
-    exec_dt_2 = dt.strptime("14:55:00:10 "+exec_date_str+" +530", "%H:%M:%S:%f %d %B, %Y %z")
+    exec_dt_2 = dt.strptime("14:55:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     if current_date > last_date:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
@@ -169,7 +169,7 @@ while(True):
             sleep(2)
             current_datetime = dt.now(ist)
         run_var = True
-        plist = runthis(plist, base_url, test, l)
+        #plist = runthis(plist, base_url, test, l)
         print("Done")
         exec_date = (last_date+td(days=1))
         while(exec_date.weekday()>=5):
