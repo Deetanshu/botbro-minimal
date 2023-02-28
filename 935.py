@@ -179,6 +179,8 @@ while(True):
         if current_date.weekday() >0 and current_date.weekday() <4:
             current_datetime = dt.now(ist)
             sleep_time = (exec_dt_2 - current_datetime).total_seconds() - 2
+            if sleep_time < 0:
+                sleep_time=0
             sleep(sleep_time)
             profiles = x.strat_3pm(profiles, l)
     else:
