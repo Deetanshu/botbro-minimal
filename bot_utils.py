@@ -650,7 +650,8 @@ def get_watchlist_200x(profile, bot_price, logger):
     quotes = get_quotes(profile, quotelist, logger)
     for symbol in quotes:
         if quotes[symbol] > highest['last_price'] and quotes[symbol] <= 200:
-            second = highest
+            second['symbol'] = highest['symbol']
+            second['last_price'] = highest['last_price']
             highest['symbol'] = symbol 
             highest['last_price'] = quotes[symbol]
             print("Highest:"+str(highest)+" Second: "+str(second))
