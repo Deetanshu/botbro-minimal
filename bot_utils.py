@@ -653,7 +653,7 @@ def get_watchlist_200x(profile, bot_price, logger):
             second = highest
             highest['symbol'] = symbol 
             highest['last_price'] = quotes[symbol]
-        elif quotes[symbol] > second['last_price'] and quotes[symbol] <=200:
+        elif quotes[symbol] > second['last_price'] and quotes[symbol] <=200 and quotes[symbol] != highest['symbol']:
             second['symbol'] = symbol
             second['last_price'] = quotes[symbol]
     
