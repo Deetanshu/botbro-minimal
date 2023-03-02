@@ -653,11 +653,11 @@ def get_watchlist_200x(profile, bot_price, logger):
             second = highest
             highest['symbol'] = symbol 
             highest['last_price'] = quotes[symbol]
-            print("Highest:"+highest+" Second: "+second)
+            print("Highest:"+str(highest)+" Second: "+str(second))
         elif quotes[symbol] > second['last_price'] and quotes[symbol] <=200 and symbol != highest['symbol']:
             second['symbol'] = symbol
             second['last_price'] = quotes[symbol]
-            print("Second: "+second)
+            print("Second: "+str(second))
     
     #Should ideally have 2
     returnlist = []
