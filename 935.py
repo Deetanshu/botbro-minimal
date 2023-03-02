@@ -101,7 +101,9 @@ def runthis(plist, base_url, test, l):
                else:
                     flags[0]=True
                     l.fwrite("[LOG] WATCHLIST CREATED")
+                    print("Watchlist: "+str(watchlist))
         if current_datetime >= check_dt and flags[0] and not flags[1]:
+            print("Updating watchlist: "+str(watchlist))
             highest = 0
             for i in watchlist:
                 if i["last_price"] > highest:
@@ -117,7 +119,6 @@ def runthis(plist, base_url, test, l):
                 for i in watchlist:
                     wl.append(i["symbol"])
                 
-                print(wl)
                 quotes = x.get_quotes(profiles[0], wl, l, "NFO")
                 for i in watchlist:
                     try:
@@ -125,6 +126,7 @@ def runthis(plist, base_url, test, l):
                     except:
                         l.error_mail("UPDATING WATCHLIST")
                         continue
+                
                 
             if flags[1] and execute is not None:
                 profiles = x.buy_active_sell(profiles,

@@ -458,7 +458,7 @@ def get_watchlist_3pm(profile, upper_bound, lower_bound, logger):
     for symbol in quotes:
         if quotes[symbol] >= lower_bound and quotes[symbol] <= upper_bound:
             watchlist.append({"symbol": symbol, "last_price": quotes[symbol]})
-    print(watchlist)
+    #print(watchlist)
     return watchlist
 
 def place_order_3pm(profile, transaction_type, tradingsymbol, logger):
@@ -666,7 +666,6 @@ def get_watchlist_200x(profile, bot_price, logger):
         returnlist.append(highest)
     if second['symbol'] != '':
         returnlist.append(second)
-    print(returnlist)
     return returnlist
 
 def get_watchlist_200x_DEPRECATED(profile, bot_price, logger):
