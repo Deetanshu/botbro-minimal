@@ -657,11 +657,13 @@ def get_watchlist_200x(profile, bot_price, logger):
             second['symbol'] = symbol
             second['last_price'] = quotes[symbol]
     
+    #Should ideally have 2
     returnlist = []
     if highest['symbol'] != '':
         returnlist.append(highest)
     if second['symbol'] != '':
         returnlist.append(second)
+    print(returnlist)
     return returnlist
 
 def get_watchlist_200x_DEPRECATED(profile, bot_price, logger):
