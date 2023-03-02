@@ -116,6 +116,8 @@ def runthis(plist, base_url, test, l):
                 wl = []
                 for i in watchlist:
                     wl.append(i["symbol"])
+                
+                print(wl)
                 quotes = x.get_quotes(profiles[0], wl, l, "NFO")
                 for i in watchlist:
                     try:
