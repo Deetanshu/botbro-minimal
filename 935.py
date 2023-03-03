@@ -172,8 +172,16 @@ while(True):
             print("Ex:",execute_datetime)
             sleep(2)
             current_datetime = dt.now(ist)
+        
         run_var = True
-        plist = runthis(profiles, base_url, test, l)
+        try:
+            plist = runthis(profiles, base_url, test, l)
+        except:
+            print("Error in runthis, retrying before quitting.")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
+                profiles = [f.result() for f in futures]
+            plist = runthis(profiles, base_url, test, l)
         print("Done")
         exec_date = (last_date+td(days=1))
         while(exec_date.weekday()>=5):
