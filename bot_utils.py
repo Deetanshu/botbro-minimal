@@ -353,6 +353,7 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
             validity = validity
         )
         logger.fwrite(str("[LOG] "+transaction_type+" order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+str(price)+" quantity "+str(quantity)))
+        print(transaction_type+" order placed for "+profile.name)
         return profile
     except:
         logger.error_mail(str("place order failure for "+profile.username))
