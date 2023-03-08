@@ -141,11 +141,12 @@ class sql_connector():
             query = query + ';'
         try:
             df = pd.read_sql_query(query, self.engine)
+            if self.isVerbose == 1:
+                print("[INFO] Executed query "+query)
+            return df
         except:
-            print("No data response.")
-        if self.isVerbose == 1:
-            print("[INFO] Executed query "+query)
-        return df
+            return None
+        
     
 """
 class BigQuery():
