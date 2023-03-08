@@ -21,7 +21,7 @@ To-do:
 #Imports
 import pandas as pd
 import pymysql
-import psycopg2
+#import psycopg2
 from sqlalchemy import create_engine
 #from google.cloud import bigquery
 
