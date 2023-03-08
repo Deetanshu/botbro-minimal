@@ -29,6 +29,7 @@ def findProcessIdByName(processName):
            pass
     return listOfProcessObjects;
 
+num_inserts = 0
 while(True):
     proc_objs = findProcessIdByName("python")
     num_proc = len(proc_objs)
@@ -38,8 +39,13 @@ while(True):
     tot_ram_used = temp[3]
     cpu_usage = psutil.cpu_percent(5)
 
-    query_string='insert into botbro.log_monitor values( now(), '+cpu_usage+', '+perc_ram+', '+tot_ram_used+', '+num_proc+');'
+    query_string='insert into botbro.log_monitor values( now(), '+str(cpu_usage)+', '+str(perc_ram)+', '+str(tot_ram_used)+', '+str(num_proc)+');'
     connection.execute(query_string)
-
+    num_inserts = num_inserts+1
     sleep(60)
+    if num_inserts >= 1500:
+        connection.engine.dispose()
+        connection.welcome()
+        query_str = "delete from botbro.log_monitor where date(time) < date(now);"
+    
 
