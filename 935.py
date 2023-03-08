@@ -11,6 +11,7 @@ import math
 import concurrent.futures
 import pytz
 from time import sleep
+from agent import Agent
 
 # Manually input these variables.
 lots = 1
@@ -42,7 +43,7 @@ profiles = [
  },
 ]
 base_url = "https://kite.zerodha.com/connect/login?v=3&api_key="
-
+report = Agent("935")
 l = Logger("strat_200x")
 
 plist = x.create_profiles(profiles, l)
@@ -87,8 +88,15 @@ def runthis(plist, base_url, test, l):
     sleep_time = (wl_dt - current_datetime).total_seconds()-5
     if sleep_time < 0:
         sleep_time = 0
+    report.action("Main Run Function", str("Sleep for "+str(sleep_time)+" seconds"))
+    report.next_up("Main Run Function", "Watchlist Generation", "Create watchlist after sleep")
     sleep(sleep_time)
+    report.action("Main Run Function","Creating watchlist")
+    report.next_up("Main Run Function","Checking for watchlist creation")
+    next_action_flag = False
+    naf_2 = False
     while(not all_flags):
+        
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
         if len(watchlist) == 0:
                watchlist = x.get_watchlist_200x(profiles[0], watch_price, l)
@@ -103,6 +111,10 @@ def runthis(plist, base_url, test, l):
                     l.fwrite("[LOG] WATCHLIST CREATED")
                     print("Watchlist: "+str(watchlist))
         if current_datetime >= check_dt and flags[0] and not flags[1]:
+            if not next_action_flag:
+                report.action("Main Run Function","Monitoring Watchlist")
+                report.next_up("Main Run Function","Place Buy Order")
+                next_action_flag = True
             print("Updating watchlist: "+str(watchlist))
             highest = 0
             for i in watchlist:
@@ -129,6 +141,8 @@ def runthis(plist, base_url, test, l):
                 
                 
             if flags[1] and execute is not None:
+                report.action("Main Run Function","Placing Buy Order")
+                report.next_up("Main Run Function","Monitor For Active Sell")
                 profiles = x.buy_active_sell(profiles,
                                   variety = "regular",
                                   exchange = "NFO",
@@ -152,7 +166,7 @@ def runthis(plist, base_url, test, l):
             
     return profiles
             
-last_date = dt.date(dt.strptime("28 February, 2023 +0530", "%d %B, %Y %z"))
+last_date = dt.date(dt.strptime("08 March, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
 exec_date_str = (last_date+td(days=1)).strftime("%d %B, %Y")
@@ -162,6 +176,8 @@ while(True):
     execute_datetime = dt.strptime("09:20:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     exec_dt_2 = dt.strptime("14:55:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
     if current_date > last_date:
+        report.action("Main Run Function", "Logging into profiles")
+        report.next_up("Main Run Function", "Watchlist Generation", "Create watchlist after login")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
             profiles = [f.result() for f in futures]
@@ -198,6 +214,8 @@ while(True):
     else:
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
+        report.action("Main Run Function", str("Sleep for "+str(num_sec)+" seconds"))
+        report.next_up("Main Run Function", "Run Strategy", "Login to profiles")
         if num_sec <0:
             num_sec = 30
         sleep(num_sec)

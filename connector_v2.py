@@ -23,8 +23,7 @@ import pandas as pd
 import pymysql
 #import psycopg2
 from sqlalchemy import create_engine
-#from google.cloud import bigquery
-
+from threading import Thread
 
 
 class postgres():
@@ -132,8 +131,12 @@ class sql_connector():
         return df
     
     def execute(self, query):
+        daemon = Thread(target=self.execute_query, daemon = True, name="sql_runner", args=(query,))
+        daemon.start()
+
+    def execute_query(self, query):
         if self.engine == None:
-            print("[ERROR] Connection not initialized. Please re-create this object.")
+            self.welcome()
             return None
         if len(query) == 0:
             return None
@@ -144,7 +147,11 @@ class sql_connector():
             if self.isVerbose == 1:
                 print("[INFO] Executed query "+query)
             return df
-        except:
+        except Exception as e:
+            if str(e) == "This result object does not return rows. It has been closed automatically.":
+                return None 
+            else:
+                print(e)
             return None
         
     
