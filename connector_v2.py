@@ -139,7 +139,10 @@ class sql_connector():
             return None
         if query[-1] != ';':
             query = query + ';'
-        df = pd.read_sql_query(query, self.engine)
+        try:
+            df = pd.read_sql_query(query, self.engine)
+        except:
+            print("No data response.")
         if self.isVerbose == 1:
             print("[INFO] Executed query "+query)
         return df
