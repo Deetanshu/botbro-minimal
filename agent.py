@@ -116,6 +116,6 @@ class Agent():
             query_string = 'insert into '+self.tables['error']+' values("'+self.module_name+'", now(), "'+function+'", "'+description+'", "'+error_type+'");'
             self.connection = self.create_connector()
             self.connection.execute(query_string)
-        except Exception e:
+        except Exception as e:
             print("Error in logging error")
             self.error_mail("Error insert", e)
