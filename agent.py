@@ -60,7 +60,7 @@ class Agent():
 
     def action(self, function, action, description=""):
         try:
-            query_string = "insert into "+self.tables['action']+" values (\""+self.module_name+"\", now(), \""+function+"\", \""+action+"\", \""+description+"\");"
+            query_string = "insert into "+self.tables['action']+" values(\""+self.module_name+"\", now(), \""+function+"\", \""+action+"\", \""+description+"\");"
             self.connection.execute(query_string)
         except Exception as e:
             self.error_mail("Action insert", e)
@@ -68,7 +68,7 @@ class Agent():
     
     def next_up(self, function, action, description=""):
         try:
-            query_string = "insert into "+self.tables['next_up']+" values (\""+self.module_name+"\", now(), \""+function+"\", \""+action+"\", \""+description+"\");"
+            query_string = "insert into "+self.tables['next_up']+" values(\""+self.module_name+"\", now(), \""+function+"\", \""+action+"\", \""+description+"\");"
             self.connection.execute(query_string)
         except Exception as e:
             self.error_mail("Next Up insert", e)
@@ -76,7 +76,7 @@ class Agent():
     
     def price_watch(self, symbol, price, strategy_name):
         try:
-            query_string = 'insert into '+self.tables['price_watch']+' values ("'+self.module_name+'", now(), "'+symbol+'", '+price+', "'+strategy_name+'");'
+            query_string = 'insert into '+self.tables['price_watch']+' values("'+self.module_name+'", now(), "'+symbol+'", '+str(price)+', "'+strategy_name+'");'
             self.connection.execute(query_string)
         except Exception as e:
             self.error_mail("Price watch insert", e)
@@ -84,7 +84,7 @@ class Agent():
     
     def trade(self, account_name, strategy_name, trade_type, isMarket, price, orderid):
         try:
-            query_string = 'insert into '+self.tables['trade']+' values ("'+self.module_name+'", now(), "'+account_name+'", "'+strategy_name+'", "'+trade_type+'", '+isMarket+', '+price+', "'+orderid+'");'
+            query_string = 'insert into '+self.tables['trade']+' values("'+self.module_name+'", now(), "'+account_name+'", "'+strategy_name+'", "'+trade_type+'", '+isMarket+', '+price+', "'+orderid+'");'
             self.connection.execute(query_string)
         except Exception as e:
             self.error_mail("Trade insert", e)
@@ -92,7 +92,7 @@ class Agent():
     
     def price_action(self, symbol, price, strategy_name, action):
         try:
-            query_string = 'insert into '+self.tables['price_action']+' values ("'+self.module_name+'", now(), "'+symbol+'", '+price+', "'+strategy_name+'", "'+action+'");'
+            query_string = 'insert into '+self.tables['price_action']+' values("'+self.module_name+'", now(), "'+symbol+'", '+str(price)+', "'+strategy_name+'", "'+action+'");'
             self.connection.execute(query_string)
         except Exception as e:
             self.error_mail("Price action insert", e)
@@ -100,7 +100,7 @@ class Agent():
     
     def error(self, function, description, error_type):
         try:
-            query_string = 'insert into '+self.tables['error']+' values ("'+self.module_name+'", now(), "'+function+'", "'+description+'", "'+error_type+'");'
+            query_string = 'insert into '+self.tables['error']+' values("'+self.module_name+'", now(), "'+function+'", "'+description+'", "'+error_type+'");'
             self.connection.execute(query_string)
         except:
             print("Error in logging error")
