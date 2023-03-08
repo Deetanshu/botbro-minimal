@@ -22,6 +22,7 @@ from datetime import datetime as dt
 import math
 import concurrent.futures
 from optionchain_stream import OptionChain
+import agent
 
 class Profile():
     """
@@ -93,6 +94,7 @@ headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 sess = requests.Session()
 cookies = dict()
+agent_935 = agent.Agent("_935")
 
 # Local methods
 def set_cookie(logger):
@@ -274,6 +276,7 @@ def get_quotes(profile, watchlist, logger, exchange = "NFO", num_retries = 0):
         for i in range(len(watchlist)):
             try:
                 quotes[watchlist[i]]=float(response[ins[i]]["last_price"])
+                agent_935.price_watch(watchlist[i], quotes[watchlist[i]])
                 logger.fwrite(str("[LOG] Quote fetched for "+watchlist[i]+" price: "+str(response[ins[i]]['last_price'])))
             except:
                 logger.fwrite("GET QUOTE - QUOTE MISSING, retrying")
@@ -341,7 +344,7 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
         
         if quantity == 0:
             return profile
-        orderid = profile.kite.place_order(
+        response = profile.kite.place_order(
             tradingsymbol = tradingsymbol,
             variety = variety,
             exchange = exchange,
@@ -352,8 +355,9 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
             price = price,
             validity = validity
         )
+        orderid = response['data']['order_id']
         logger.fwrite(str("[LOG] "+transaction_type+" order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+str(price)+" quantity "+str(quantity)))
-        print(transaction_type+" order placed for "+profile.name)
+        agent_935.trade(profile.name, tradingsymbol, "935", transaction_type, 0, price, orderid)
         return profile
     except:
         logger.error_mail(str("place order failure for "+profile.username))
@@ -403,13 +407,17 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
     if test:
         print("Buy order for "+tradingsymbol+" at price "+price)
     else:
+        agent_935.action("Buying with SL/Target", "Place Buy Order")
+        agent_935.next_up("Buy with SL/Target","Monitor price for sell")
+        agent_935.price_action(tradingsymbol, price, "200x", "BUY")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             transaction_type = 'BUY'
             futures = [executor.submit(place_order_200x, p, tradingsymbol, variety, exchange, transaction_type, product, order_type, price, validity, logger) for p in profiles]
             profiles = [f.result() for f in futures]
 
         logger.fwrite(str("[LOG] BUY Orders created for profiles"))
-    
+    agent_935.action("Buy with SL/Target", "Monitoring price for selling")
+    agent_935.next_up("Buy with SL/Target","Update stoploss or sell")
     while(True):
         quote = get_quotes(profiles[0], [tradingsymbol], logger, exchange)
         update_flag = False
@@ -418,6 +426,9 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
                 print("SELL order placed for "+tradingsymbol+"at price "+target)
                 return profiles
             else:
+                agent_935.action("Buy with SL/Target", "Placing Sell Order at target")
+                agent_935.next_up("Buy with SL/Target","Return to Main")
+                agent_935.price_action(tradingsymbol, quote[tradingsymbol], "200x", "SELL")
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     transaction_type = 'SELL'
                     futures = [executor.submit(place_order_200x, p, tradingsymbol, variety, exchange, transaction_type, product, order_type, target, validity, logger) for p in profiles]
@@ -429,6 +440,9 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
                 print("SELL order placed for "+tradingsymbol+"at price "+stoploss)
                 return profiles
             else:
+                agent_935.action("Buy with SL/Target", "Placing Sell Order at Stoploss")
+                agent_935.next_up("Buy with SL/Target","Return to Main")
+                agent_935.price_action(tradingsymbol, quote[tradingsymbol], "200x", "SELL")
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     transaction_type = 'SELL'
                     futures = [executor.submit(place_order_200x, p, tradingsymbol, variety, exchange, transaction_type, product, order_type, stoploss, validity, logger) for p in profiles]
@@ -437,7 +451,9 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
             return profiles
 
         if quote[tradingsymbol] >= target-10 and not update_flag:
-            stoploss = price + 2
+            agent_935.action("Buy with SL/Target", "Updating SL and monitoring price")
+            agent_935.next_up("Buy with SL/Target","Place Sell Orders")
+            stoploss = price + 3
             update_flag = True
         sleep(interval)
 

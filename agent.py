@@ -19,7 +19,7 @@ class Agent():
                         'error': 'botbro.error',
                         'next_up': 'botbro.next_up',
                         'price_watch': 'botbro.price_watch',
-                        'trade': 'botbro.trade',
+                        'trade': 'botbro.trade_book',
                         'price_action': 'botbro.price_action'
                         }
         self.logger = logger.Logger(str("Agent"+module_name))
@@ -93,9 +93,9 @@ class Agent():
             self.error_mail("Price watch insert", e)
             self.logger.fwrite(str("Attempted to send error mail for exception "+str(e)))
     
-    def trade(self, account_name, strategy_name, trade_type, isMarket, price, orderid):
+    def trade(self, account_name, tradingsymbol, strategy_name, trade_type, isMarket, price, orderid):
         try:
-            query_string = 'insert into '+self.tables['trade']+' values("'+self.module_name+'", now(), "'+account_name+'", "'+strategy_name+'", "'+trade_type+'", '+str(isMarket)+', '+str(price)+', "'+orderid+'");'
+            query_string = 'insert into '+self.tables['trade']+' values("'+self.module_name+'", now(), "'+account_name+'", "'+strategy_name+'", "'+tradingsymbol+'", "'+trade_type+'", '+str(isMarket)+', '+str(price)+', "'+orderid+'");'
             self.connection = self.create_connector()
             self.connection.execute(query_string)
         except Exception as e:
