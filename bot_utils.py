@@ -418,9 +418,10 @@ def buy_active_sell(profiles, variety, exchange, tradingsymbol, quantity, produc
         logger.fwrite(str("[LOG] BUY Orders created for profiles"))
     agent_935.action("Buy with SL/Target", "Monitoring price for selling")
     agent_935.next_up("Buy with SL/Target","Update stoploss or sell")
+    update_flag = False
     while(True):
         quote = get_quotes(profiles[0], [tradingsymbol], logger, exchange)
-        update_flag = False
+        
         if quote[tradingsymbol] >= target:
             if test:
                 print("SELL order placed for "+tradingsymbol+"at price "+target)
