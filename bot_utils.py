@@ -344,7 +344,7 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
         
         if quantity == 0:
             return profile
-        response = profile.kite.place_order(
+        orderid = profile.kite.place_order(
             tradingsymbol = tradingsymbol,
             variety = variety,
             exchange = exchange,
@@ -355,7 +355,6 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
             price = price,
             validity = validity
         )
-        orderid = response['data']['order_id']
         logger.fwrite(str("[LOG] "+transaction_type+" order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+str(price)+" quantity "+str(quantity)))
         agent_935.trade(profile.name, tradingsymbol, "200x", transaction_type, 0, price, orderid)
         return profile
