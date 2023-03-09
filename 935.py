@@ -115,7 +115,7 @@ def runthis(plist, base_url, test, l):
                 report.action("Main Run Function","Monitoring Watchlist")
                 report.next_up("Main Run Function","Place Buy Order")
                 next_action_flag = True
-            print("Updating watchlist: "+str(watchlist))
+            #print("Updating watchlist: "+str(watchlist))
             highest = 0
             for i in watchlist:
                 if i["last_price"] > highest:
