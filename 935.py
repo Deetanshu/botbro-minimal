@@ -166,7 +166,7 @@ def runthis(plist, base_url, test, l):
             
     return profiles
             
-last_date = dt.date(dt.strptime("08 March, 2023 +0530", "%d %B, %Y %z"))
+last_date = dt.date(dt.strptime("11 March, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
 exec_date_str = (last_date+td(days=1)).strftime("%d %B, %Y")
