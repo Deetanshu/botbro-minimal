@@ -88,7 +88,7 @@ def runthis(plist, base_url, test, l):
     sleep_time = (wl_dt - current_datetime).total_seconds()-5
     if sleep_time < 0:
         sleep_time = 0
-    report.action("Main Run Function", str("Sleep until "+str(wl_dt)+"."))
+    report.action("Main Run Function", str("Sleep until "+dt.strftime(wl_dt, "%d %B, %Y %H:%M")+"."))
     report.next_up("Main Run Function", "Watchlist Generation", "Create watchlist after sleep")
     sleep(sleep_time)
     report.action("Main Run Function","Creating watchlist")
@@ -184,7 +184,7 @@ while(True):
         last_date = current_date
         current_datetime = dt.now(ist)
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 40
-        report.action("Main Run Function", str("Sleeping until "+str(execute_datetime)+"."))
+        report.action("Main Run Function", str("Sleeping until "+dt.strftime(execute_datetime, "%d %B, %Y %H:%M")+"."))
         report.next_up("Main Run Function", "Watchlist Generation", "Login to profiles")
         while(current_datetime <= execute_datetime):
             print("not yet")
@@ -218,7 +218,7 @@ while(True):
     else:
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
-        report.action("Main Run Function", str("Sleeping until "+str(execute_datetime)+"."))
+        report.action("Main Run Function", str("Sleeping until "+dt.strftime(execute_datetime, "%d %B, %Y %H:%M")+"."))
         report.next_up("Main Run Function", "Login to Profiles", "Login to profiles")
         if num_sec <0:
             num_sec = 30
