@@ -356,7 +356,7 @@ def place_order_200x(profile, tradingsymbol, variety, exchange, transaction_type
             validity = validity
         )
         logger.fwrite(str("[LOG] "+transaction_type+" order created for "+profile.name+" with orderid "+orderid+" for "+tradingsymbol+" at price "+str(price)+" quantity "+str(quantity)))
-        agent_935.trade(profile.name, tradingsymbol, "200x", transaction_type, 0, price, orderid)
+        agent_935.order(profile.name, tradingsymbol, "200x", transaction_type, 0, price, orderid)
         return profile
     except:
         logger.error_mail(str("place order failure for "+profile.username))

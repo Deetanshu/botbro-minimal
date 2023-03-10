@@ -186,9 +186,6 @@ while(True):
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 40
         report.action("Main Run Function", str("Sleep for "+str(num_sec)+" seconds"))
         report.next_up("Main Run Function", "Run Strategy", "Login to profiles")
-        if num_sec <0:
-            num_sec = 30
-        sleep(num_sec)
         while(current_datetime <= execute_datetime):
             print("not yet")
             print("cr:",current_datetime)
