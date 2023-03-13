@@ -10,7 +10,7 @@ from datetime import timedelta as td
 import math
 import concurrent.futures
 import pytz
-from time import sleep
+import time
 from agent import Agent
 
 # Manually input these variables.
@@ -48,35 +48,25 @@ l = Logger("strat_200x")
 
 plist = x.create_profiles(profiles, l)
 
-def watchlist_200x_DEPRECATED(profile,bot_price, l):
-    """
-    This has been deprecated due to failures with accessing NSE platform
-    """
-    try:
-        call_put_list = x.get_all_calls_puts("https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY", l)
-    except:
-        try:
-            call_put_list = x.get_optionstream(profile, l)
-        except:
-            print("Error in both so retrying...")
-            l.fwrite("[LOG] Retrying by recursion. ")
-            #return watchlist_200x(profile, bot_price, l)
-    wl = []
-    for i in call_put_list:
-        if i["askprice"]>=bot_price and i["askprice"]<=200:
-            wl.append(i)
-    return wl
+def sleep(num_sec):
+    iterations = math.floor(num_sec/5)
+    remainder = num_sec%5
+    for _ in range(iterations):
+        time.sleep(5)
+    time.sleep(remainder)
 
-
-
-def runthis(plist, base_url, test, l):
+def runthis(plist, base_url, test, l):  
     profiles = plist
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
     #ist = pytz.timezone('Asia/Kolkata')
     today = dt.date(current_datetime)
     exec_date = today.strftime("%d %B, %Y")
-    wl_dt = dt.strptime("09:25:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
-    check_dt = dt.strptime("09:33:00:10 "+exec_date+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    wl_dt = dt.strptime(
+        f"09:25:00:10 {exec_date} +0530", "%H:%M:%S:%f %d %B, %Y %z"
+    )
+    check_dt = dt.strptime(
+        f"09:33:00:10 {exec_date} +0530", "%H:%M:%S:%f %d %B, %Y %z"
+    )
     watchlist = []
     watch_price = 180
     all_flags = False
@@ -86,30 +76,29 @@ def runthis(plist, base_url, test, l):
     stoploss = 180
     current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
     sleep_time = (wl_dt - current_datetime).total_seconds()-5
-    if sleep_time < 0:
-        sleep_time = 0
+    sleep_time = max(sleep_time, 0)
     report.action("Main Run Function", str("Sleep until "+dt.strftime(wl_dt, "%d %B, %Y %H:%M")+"."))
     report.next_up("Main Run Function", "Watchlist Generation", "Create watchlist after sleep")
     sleep(sleep_time)
     report.action("Main Run Function","Creating watchlist")
     report.next_up("Main Run Function","Checking for watchlist creation")
     next_action_flag = False
-    naf_2 = False
-    while(not all_flags):
+
+    while (not all_flags):
         
         current_datetime = dt.now(pytz.timezone('Asia/Kolkata'))
         if len(watchlist) == 0:
-               watchlist = x.get_watchlist_200x(profiles[0], watch_price, l)
-               if len(watchlist)==0:
-                   watch_price = watch_price - 1
-                   sleep(10)
-                   if watch_price <150:
-                       l.error_mail("NO ELIGIBLE CALLS OR PUTS")
-                     #  break
-               else:
-                    flags[0]=True
-                    l.fwrite("[LOG] WATCHLIST CREATED")
-                    print("Watchlist: "+str(watchlist))
+            watchlist = x.get_watchlist_200x(profiles[0], watch_price, l)
+            if len(watchlist)==0:
+                watch_price = watch_price - 1
+                sleep(10)
+                if watch_price <150:
+                    l.error_mail("NO ELIGIBLE CALLS OR PUTS")
+                  #  break
+            else:
+                flags[0]=True
+                l.fwrite("[LOG] WATCHLIST CREATED")
+                print(f"Watchlist: {str(watchlist)}")
         if current_datetime >= check_dt and flags[0] and not flags[1]:
             if not next_action_flag:
                 report.action("Main Run Function","Monitoring Watchlist")
@@ -127,19 +116,15 @@ def runthis(plist, base_url, test, l):
                 stoploss = highest - 25
                 flags[1] = True
             else:
-                wl = []
-                for i in watchlist:
-                    wl.append(i["symbol"])
-                
+                wl = [i["symbol"] for i in watchlist]
                 quotes = x.get_quotes(profiles[0], wl, l, "NFO")
                 for i in watchlist:
                     try:
                         i["last_price"] = quotes[i["symbol"]]
-                    except:
+                    except Exception:
                         l.error_mail("UPDATING WATCHLIST")
                         continue
-                
-                
+
             if flags[1] and execute is not None:
                 report.action("Main Run Function","Placing Buy Order")
                 report.next_up("Main Run Function","Monitor For Active Sell")
@@ -161,26 +146,41 @@ def runthis(plist, base_url, test, l):
             sleep_time = (check_dt-current_datetime).total_seconds()-2
             if sleep_time < 3:
                 sleep_time = 0
-            print("Sleeping for "+str(sleep_time))
+            print(f"Sleeping for {str(sleep_time)}")
             sleep(sleep_time)
-            
+
     return profiles
             
 last_date = dt.date(dt.strptime("11 March, 2023 +0530", "%d %B, %Y %z"))
 ist = pytz.timezone('Asia/Kolkata')
 test = False
 exec_date_str = (last_date+td(days=1)).strftime("%d %B, %Y")
-while(True):                    
+while True:                    
     current_datetime = dt.now(ist)
     current_date = dt.date(current_datetime)
-    execute_datetime = dt.strptime("09:20:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
-    exec_dt_2 = dt.strptime("14:55:00:10 "+exec_date_str+" +0530", "%H:%M:%S:%f %d %B, %Y %z")
+    execute_datetime = dt.strptime(
+        f"09:20:00:10 {exec_date_str} +0530", "%H:%M:%S:%f %d %B, %Y %z"
+    )
+    exec_dt_2 = dt.strptime(
+        f"14:55:00:10 {exec_date_str} +0530", "%H:%M:%S:%f %d %B, %Y %z"
+    )
     if current_date > last_date:
         report.action("Main Run Function", "Logging into profiles")
         report.next_up("Main Run Function", "Watchlist Generation", "Create watchlist after login")
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
-            profiles = [f.result() for f in futures]
+        retries = 0
+        while (retries <5):
+            try:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
+                    profiles = [f.result() for f in futures]
+                break
+            except Exception as e:
+                if retries <5:
+                    print("Retrying login.")
+                else:
+                    print("Giving up")
+                    exit()
+                retries += 1
         last_date = current_date
         current_datetime = dt.now(ist)
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 40
@@ -191,12 +191,12 @@ while(True):
             print("cr:",current_datetime)
             print("Ex:",execute_datetime)
             sleep(2)
-            
-        
+
+
         run_var = True
         try:
             plist = runthis(profiles, base_url, test, l)
-        except:
+        except Exception:
             print("Error in runthis, retrying before quitting.")
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = [executor.submit(x.api_weblogin, base_url, p,l) for p in plist]
@@ -206,15 +206,13 @@ while(True):
         exec_date = (last_date+td(days=1))
         while(exec_date.weekday()>=5):
             exec_date = (exec_date+td(days=1))
-        
+
         exec_date_str = exec_date.strftime("%d %B, %Y")
         if current_date.weekday() >0 and current_date.weekday() <4:
             current_datetime = dt.now(ist)
             sleep_time = (exec_dt_2 - current_datetime).total_seconds() - 2
-            if sleep_time < 0:
-                sleep_time=0
+            sleep_time = max(sleep_time, 0)
             sleep(sleep_time)
-            #profiles = x.strat_3pm(profiles, l)
     else:
         num_sec = math.floor((execute_datetime-current_datetime).total_seconds()) - 150
         print("Sleeping for ", num_sec)
@@ -223,5 +221,4 @@ while(True):
         if num_sec <0:
             num_sec = 30
         sleep(num_sec)
-    
-print("done")
+
